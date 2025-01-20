@@ -14,7 +14,7 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 app.use("/api/users", userRouter);
-app.use('/api/email', emailRouter)
+app.use('/api/email', emailRouter);
 // Serve static files (attachments) from the 'uploads' directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

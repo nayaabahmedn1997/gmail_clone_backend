@@ -33,16 +33,54 @@ const createAnEmail = async (req, res) => {
   }; 
 
 
-const fetchAllEmails = async (req, res)=>{
+  const fetchSingleEmail = async (req, res)=>{
+    try {
+        const {email_id} = req.body;
+        
+        const emailData = await emailModel.findById(email_id).populate('sender', "name email")
+        res.status(200).json({
+            "message":"Emails successfully fetched",
+            emailData
+        })
+    } catch (error) {
+        return res.status(200).json({
+            "message":"Internal server error"
+        })
+    }
+  }
+
+const fetchAllInboxEmails = async (req, res)=>{
     try {
         const {email} = req.body;
         const user = await userModel.findOne({email});
-        const emails = await emailModel.find({sender:user._id}).sort({ createdAt: -1 });
+        console.log(user)
+        const emails = await emailModel.find({recipient:user.email, folder:'inbox'}).populate('sender', "name email").sort({ createdAt: -1 });
+       
         res.status(200).json({
             "message":"Emails successfully fetched",
             emails
         })
     } catch (error) {
+        console.log(error)
+        return res.status(200).json({
+            "message":"Internal server error"
+        })
+    }
+}
+
+const fetchAllTrashEmails = async (req, res)=>{
+    try {
+        const {email} = req.body;
+        const user = await userModel.findOne({email});
+        console.log(user)
+        const emails = await emailModel.find({recipient:user.email, folder:'trash'}).populate('sender', "name email").sort({ createdAt: -1 });
+       
+        res.status(200).json({
+            "message":"Emails successfully fetched",
+            emails
+        })
+    } catch (error) {
+        console.log(error)
         return res.status(200).json({
             "message":"Internal server error"
         })
@@ -51,9 +89,9 @@ const fetchAllEmails = async (req, res)=>{
 
 const moveEmailFromInboxToTrash = async (req, res)=>{
     try {
-        const {emailID} = req.body;
-       
-        await emailModel.findByIdAndUpdate(emailID,{
+        const {email_id} = req.body;
+        console.log(email_id)
+        await emailModel.findByIdAndUpdate(email_id,{
             folder:"trash"
         });
 
@@ -71,9 +109,9 @@ const moveEmailFromInboxToTrash = async (req, res)=>{
 
 const deleteAnEmail = async (req, res)=>{
     try {
-        const {emailID} = req.body;
+        const {email_id} = req.body;
         
-        await emailModel.findByIdAndDelete(emailID);
+        await emailModel.findByIdAndDelete(email_id);
         return res.status(200).json({
             "message":"Email deleted successfully",
         })
@@ -101,4 +139,4 @@ const deleteEmails = async(req, res)=>{
     }
 }
 
-module.exports = {createAnEmail, fetchAllEmails, moveEmailFromInboxToTrash, deleteAnEmail, deleteEmails };
+module.exports = {createAnEmail, fetchAllInboxEmails, moveEmailFromInboxToTrash, deleteAnEmail, deleteEmails, fetchSingleEmail , fetchAllTrashEmails};
