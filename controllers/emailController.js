@@ -23,6 +23,7 @@ const createAnEmail = async (req, res) => {
         recipient,
       subject,
       body,
+      folder:'inbox',
       attachment: attachmentPath
     };
     const newEmail = new emailModel(emailData);
@@ -54,7 +55,8 @@ const fetchAllInboxEmails = async (req, res)=>{
     try {
         const {email} = req.body;
         const user = await userModel.findOne({email});
-        const emails = await emailModel.find({recipient:user.email, folder:'inbox'}).populate('sender', "name email").sort({ createdAt: -1 });
+        
+        const emails = await emailModel.find({recipient:email, folder:'inbox'}).populate('sender', "name email").sort({ timestamp: -1 });
        
         res.status(200).json({
             "message":"Emails successfully fetched",
@@ -72,7 +74,7 @@ const fetchAllTrashEmails = async (req, res)=>{
     try {
         const {email} = req.body;
         const user = await userModel.findOne({email});
-        const emails = await emailModel.find({recipient:user.email, folder:'trash'}).populate('sender', "name email").sort({ createdAt: -1 });
+        const emails = await emailModel.find({recipient:user.email, folder:'trash'}).populate('sender', "name email").sort({  timestamp: -1  });
        
         res.status(200).json({
             "message":"Emails successfully fetched",
@@ -141,7 +143,7 @@ const fetchSentEmails = async( req, res)=>{
     try {
         const {email} = req.body;
         const user  = await userModel.findOne({email});
-        const emails = await emailModel.find({sender:new mongoose.Types.ObjectId(user._id)}).sort({ createdAt: -1 });
+        const emails = await emailModel.find({sender:new mongoose.Types.ObjectId(user._id)}).sort({  timestamp: -1  });
         return res.status(200).json({
             "message":"Sent emails fetched successfully",
             emails
@@ -158,7 +160,7 @@ const fetchDraftEmails = async( req, res)=>{
     try {
         const {email} = req.body;
         const user  = await userModel.findOne({email});
-        const emails = await emailModel.find({sender:new mongoose.Types.ObjectId(user._id), folder:'draft'}).sort({ createdAt: -1 });
+        const emails = await emailModel.find({sender:new mongoose.Types.ObjectId(user._id), folder:'drafts'}).sort({  timestamp: -1  });
         return res.status(200).json({
             "message":"Draft emails fetched successfully",
             emails
@@ -173,33 +175,58 @@ const fetchDraftEmails = async( req, res)=>{
 
 
 const createADraftEmail = async (req, res) => {
-
-    const { to:recipient, subject, body,email} = req.body;
-    const attachmentPath = req.file ? req.file.path : null; // If attachment is uploaded, store its path
-    const sendUser = await userModel.findOne({email:req.email});
-    const recipientUser = await userModel.findOne({email:recipient});
-    if(!recipientUser)
-    {
-        return res.status(404).json({
-            "message":"Recipient not found"
+    try {
+        const { to:recipient, subject, body,email} = req.body;
+        const attachmentPath = req.file ? req.file.path : null; // If attachment is uploaded, store its path
+        const sendUser = await userModel.findOne({email:req.email});
+        const recipientUser = await userModel.findOne({email:recipient});
+        if(!recipientUser)
+        {
+            return res.status(404).json({
+                "message":"Recipient not found"
+            })
+        }
+        const emailData = {
+            sender:sendUser._id,
+            recipient,
+          subject,
+          body,
+          folder:'drafts',
+          attachment: attachmentPath
+        };
+        const newEmail = new emailModel(emailData);
+        // Handle email sending logic (e.g., save to database, send email, etc.)
+        await newEmail.save();
+        res.status(201).json({
+            "message":"Email moved to draft"
+        });
+    } catch (error) {
+        return res.status(200).json({
+            "message":"Internal server error"
         })
     }
-    const emailData = {
-        sender:sendUser._id,
-        recipient,
-      subject,
-      body,
-      folder:'draft',
-      attachment: attachmentPath
-    };
-    const newEmail = new emailModel(emailData);
-    // Handle email sending logic (e.g., save to database, send email, etc.)
-    await newEmail.save();
-    res.status(201).json({
-        "message":"Email moved to draft"
-    });
+   
   }; 
 
+
+  const sendDraftMail = async (req, res)=>
+  {
+    try {
+        const {email_id} = req.body;
+        await emailModel.findByIdAndUpdate(email_id,{
+            folder:"inbox",
+            createdAt: new Date() 
+        });
+
+        return res.status(200).json({
+            "message":"Email Sent successfully"
+        })
+    } catch (error) {
+        return res.status(200).json({
+            "message":"Internal server error"
+        })
+    }
+  }
 
 
 module.exports = 
@@ -207,4 +234,6 @@ module.exports =
 moveEmailFromInboxToTrash, deleteAnEmail, 
 deleteEmails, fetchSingleEmail , 
 fetchAllTrashEmails, fetchSentEmails, 
-fetchDraftEmails, createADraftEmail};
+fetchDraftEmails, createADraftEmail,
+sendDraftMail
+};

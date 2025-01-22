@@ -8,6 +8,6 @@ const emailSchema = new mongoose.Schema({
   folder: { type: String, enum: ['inbox', 'sent', 'drafts', 'trash'], default: 'inbox' },
   timestamp: { type: Date, default: Date.now },
   attachment:{type: String }
-});
+},{timestamps: true});
 
 module.exports = mongoose.model('Email', emailSchema);
