@@ -229,11 +229,30 @@ const createADraftEmail = async (req, res) => {
   }
 
 
+  const fetchAllMails = async (req, res)=>{
+    try {
+        const {email} = req.body;
+        const user = await userModel.findOne({email});
+        const emails = await emailModel.find(
+            {sender:new mongoose.Types.ObjectId(user._id),
+            recipient: email
+            }).populate('sender', "name email")
+        return res.status(200).json({
+            "message":"Emails fetched successfully",
+            emails
+        })
+    } catch (error) {
+        return res.status(200).json({
+            "message":"Internal server error"
+        })
+    }
+  }
+
 module.exports = 
 {createAnEmail, fetchAllInboxEmails, 
 moveEmailFromInboxToTrash, deleteAnEmail, 
 deleteEmails, fetchSingleEmail , 
 fetchAllTrashEmails, fetchSentEmails, 
 fetchDraftEmails, createADraftEmail,
-sendDraftMail
+sendDraftMail, fetchAllMails
 };

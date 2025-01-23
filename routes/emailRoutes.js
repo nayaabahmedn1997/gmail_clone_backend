@@ -1,7 +1,7 @@
 
 
 const express = require('express');
-const { createAnEmail, moveEmailFromInboxToTrash, deleteAnEmail, deleteEmails, fetchSingleEmail, fetchAllInboxEmails, fetchAllTrashEmails, fetchSentEmails, createADraftEmail, fetchDraftEmails, sendDraftMail } = require('../controllers/emailController');
+const { createAnEmail, moveEmailFromInboxToTrash, deleteAnEmail, deleteEmails, fetchSingleEmail, fetchAllInboxEmails, fetchAllTrashEmails, fetchSentEmails, createADraftEmail, fetchDraftEmails, sendDraftMail, fetchAllMails } = require('../controllers/emailController');
 const emailRouter = express.Router();
 const multer = require('multer');
 const authMiddleWare = require('../middlewares/authMiddleWare');
@@ -52,4 +52,8 @@ emailRouter.get("/get-draft-emails",authMiddleWare, fetchDraftEmails)
 
 //Route to send draft email
 emailRouter.post("/send-draft-mail", authMiddleWare, sendDraftMail);
+
+
+//Route to fetch all mails
+emailRouter.get("/fetch-all-mails", authMiddleWare, fetchAllMails);
 module.exports = emailRouter; 
