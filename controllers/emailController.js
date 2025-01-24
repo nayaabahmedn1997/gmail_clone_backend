@@ -1,6 +1,8 @@
 const { default: mongoose } = require("mongoose");
 const emailModel = require("../models/emailModel");
 const userModel = require("../models/userModel");
+const io = require("../server");
+
 
 
 
@@ -8,7 +10,8 @@ const userModel = require("../models/userModel");
 
 const createAnEmail = async (req, res) => {
 
-    const { to:recipient, subject, body,email} = req.body;
+    try {
+        const { to:recipient, subject, body,email} = req.body;
     const attachmentPath = req.file ? req.file.path : null; // If attachment is uploaded, store its path
     const sendUser = await userModel.findOne({email:req.email});
     const recipientUser = await userModel.findOne({email:recipient});
@@ -29,9 +32,29 @@ const createAnEmail = async (req, res) => {
     const newEmail = new emailModel(emailData);
     // Handle email sending logic (e.g., save to database, send email, etc.)
     await newEmail.save();
+     // Emit a "sent" event to the sender
+     const io = req.app.get('io');
+     io.to(sendUser._id).emit('emailSent', {
+       message: 'Your email has been sent successfully.',
+
+     });
+ 
+     // Emit a "received" event to the recipient
+     io.to(recipient).emit('newEmail', {
+       message: 'You have a new email!',
+       email,
+     });
+ 
     res.status(201).json({
         "message":"Email sent successfully"
     });
+    } catch (error) {
+        console.log(error);
+        return res.status(200).json({
+            "message":"Internal server error"
+        })
+    }
+    
   }; 
 
 
