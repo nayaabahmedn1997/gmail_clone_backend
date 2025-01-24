@@ -15,11 +15,11 @@ app.use(function(req, res, next) {
   res.header('Access-Control-Allow-Origin', '*' );
   next();
 });
-app.use(cors({credentials: true, origin: 'http://localhost:3000'}));
+app.use(cors({credentials: true, origin: 'https://gmailguvifrontend.netlify.app'}));
 app.use(express.json());
 const io = new Server(server, {
   cors: {
-      origin: "http://localhost:3000", // Frontend URL
+      origin: "https://gmailguvifrontend.netlify.app", // Frontend URL
       // allowedHeaders: ["my-custom-header"],
       methods: ["GET", "POST"],
       credentials: true
