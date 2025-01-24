@@ -11,6 +11,7 @@ const io = require("../server");
 const createAnEmail = async (req, res) => {
 
     try {
+        const sender = req.userId; // Extract sender from authenticated request
         const { to:recipient, subject, body,email} = req.body;
     const attachmentPath = req.file ? req.file.path : null; // If attachment is uploaded, store its path
     const sendUser = await userModel.findOne({email:req.email});
@@ -31,10 +32,11 @@ const createAnEmail = async (req, res) => {
     };
     const newEmail = new emailModel(emailData);
     // Handle email sending logic (e.g., save to database, send email, etc.)
+
     await newEmail.save();
      // Emit a "sent" event to the sender
      const io = req.app.get('io');
-     io.to(sendUser._id).emit('emailSent', {
+     io.to(sender).emit('emailSent', {
        message: 'Your email has been sent successfully.',
 
      });
