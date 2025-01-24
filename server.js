@@ -36,13 +36,10 @@ io.use(async (socket, next) => {
   try {
     const decoded =  await jwt.verify(token, process.env.JWT_SECRET);
      // Validate token
-     console.log(decoded)
     socket.userId = decoded.email; // Attach user ID to the socket
-    console.log(1)
     next();
   } catch (err) {
     next(new Error('Authentication error: Invalid token'));
-    console.log(err)
   }
 });
 
